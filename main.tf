@@ -12,10 +12,14 @@ provider "azurerm" {
   features {}
 }
 
+locals {
+  web_server_name = var.environment == "production" ? "${var.web_server_name}-prod" : "${var.web_server_name}-dev"
+}
 
 resource "azurerm_resource_group" "web_server_rg" {
   name     = var.web_server_rg
   location = var.web_server_location
+
 }
 
 resource "azurerm_virtual_network" "web_server_vnet" {
@@ -23,6 +27,9 @@ resource "azurerm_virtual_network" "web_server_vnet" {
   resource_group_name = azurerm_resource_group.web_server_rg.name
   address_space       = [var.web_server_address_space]
   location            = var.web_server_location
+  tags                = {
+    webapp = local.web_server_name
+  }
 }
 
 
@@ -120,6 +127,17 @@ resource "azurerm_availability_set" "web_server_avalibility_set" {
   platform_fault_domain_count = 2
 }
 
+module "storage_account" {
+
+  source = "./storage"
+  location = "eastus"
+  storage_account_rg = "demo"
+  storage_account_name = "narhedemostorage"
+  
+}
+
+
+/**
 resource "azurerm_public_ip" "web_server_lb_public_ip" {
   name                = "${var.resource_prefix}-lb-public-ip"
   location            = var.web_server_location
@@ -129,6 +147,7 @@ resource "azurerm_public_ip" "web_server_lb_public_ip" {
 }
 
 resource "azurerm_lb" "web_server_lb" {
+  count = 1
   name                = "${var.resource_prefix}-lb"
   location            = var.web_server_location
   resource_group_name = azurerm_resource_group.web_server_rg.name
@@ -220,7 +239,7 @@ instances = var.web_server_count
   }
 }
 
-
+**/
 
 
 
